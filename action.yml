@@ -45,16 +45,17 @@ inputs:
 runs:
   using: composite
   steps:
-    # Default to GitHub cache: an empty or unexpected backend value stays safe.
-    - if: ${{ inputs.backend != 'local' }}
+    # Local S3 only when explicitly selected AND credentials are present;
+    # otherwise GitHub cache. So an empty backend or missing creds stays safe.
+    - if: ${{ !(inputs.backend == 'local' && inputs.s3-access-key != '') }}
       uses: actions/cache@v4
       with:
         path: ${{ inputs.path }}
         key: ${{ inputs.key }}
         restore-keys: ${{ inputs.restore-keys }}
 
-    - if: ${{ inputs.backend == 'local' }}
-      uses: tespkg/actions-cache@v1
+    - if: ${{ inputs.backend == 'local' && inputs.s3-access-key != '' }}
+      uses: tespkg/actions-cache@e07e2d4953dc8c020d447363e5064e36d04f3cf9
       with:
         path: ${{ inputs.path }}
         key: ${{ inputs.key }}
