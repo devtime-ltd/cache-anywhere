@@ -1,0 +1,28 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  github-backend:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - name: Seed a file to cache
+        run: mkdir -p data && echo "$GITHUB_SHA" > data/marker
+
+      - name: Cache via github backend
+        uses: ./
+        with:
+          path: data
+          key: cache-anywhere-test-${{ github.sha }}
+          backend: github
+
+      - name: Empty backend defaults to github (no crash)
+        uses: ./
+        with:
+          path: data
+          key: cache-anywhere-test-empty-${{ github.sha }}
+          backend: ""

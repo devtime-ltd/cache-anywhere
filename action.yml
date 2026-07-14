@@ -1,0 +1,68 @@
+name: Cache Anywhere
+description: actions/cache with a backend switch - GitHub's cache, or a self-hosted S3 (e.g. Garage/MinIO) cache.
+branding:
+  icon: hard-drive
+  color: gray-dark
+
+inputs:
+  path:
+    description: Files, directories, and wildcard patterns to cache and restore.
+    required: true
+  key:
+    description: Cache key.
+    required: true
+  restore-keys:
+    description: Ordered fallback keys used when key misses.
+    required: false
+  backend:
+    description: '"local" uses the S3 cache; anything else (incl. empty) uses GitHub cache.'
+    required: true
+  s3-endpoint:
+    description: S3 host for the local backend.
+    required: false
+    default: garage
+  s3-port:
+    description: S3 port for the local backend.
+    required: false
+    default: "3900"
+  s3-insecure:
+    description: Use plain HTTP for the local backend.
+    required: false
+    default: "true"
+  s3-bucket:
+    description: Bucket for the local backend.
+    required: false
+    default: ci-cache
+  s3-access-key:
+    description: Access key for the local backend.
+    required: false
+    default: ""
+  s3-secret-key:
+    description: Secret key for the local backend.
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    # Default to GitHub cache: an empty or unexpected backend value stays safe.
+    - if: ${{ inputs.backend != 'local' }}
+      uses: actions/cache@v4
+      with:
+        path: ${{ inputs.path }}
+        key: ${{ inputs.key }}
+        restore-keys: ${{ inputs.restore-keys }}
+
+    - if: ${{ inputs.backend == 'local' }}
+      uses: tespkg/actions-cache@v1
+      with:
+        path: ${{ inputs.path }}
+        key: ${{ inputs.key }}
+        restore-keys: ${{ inputs.restore-keys }}
+        endpoint: ${{ inputs.s3-endpoint }}
+        port: ${{ inputs.s3-port }}
+        insecure: ${{ inputs.s3-insecure }}
+        bucket: ${{ inputs.s3-bucket }}
+        accessKey: ${{ inputs.s3-access-key }}
+        secretKey: ${{ inputs.s3-secret-key }}
+        use-fallback: "false"
