@@ -14,6 +14,10 @@ inputs:
   restore-keys:
     description: Ordered fallback keys used when key misses.
     required: false
+  restore-only:
+    description: Restore but never save. Set true on untrusted refs (e.g. PRs) so the local S3 cache cannot be poisoned.
+    required: false
+    default: "false"
   backend:
     description: '"local" uses the S3 cache; anything else (incl. empty) uses GitHub cache.'
     required: true
@@ -49,21 +53,22 @@ inputs:
 runs:
   using: composite
   steps:
-    # Local S3 only when explicitly selected AND credentials are present;
+    # Local S3 only when explicitly selected AND both credentials are present;
     # otherwise GitHub cache. So an empty backend or missing creds stays safe.
-    - if: ${{ !(inputs.backend == 'local' && inputs.s3-access-key != '') }}
-      uses: actions/cache@v4
+    - if: ${{ !(inputs.backend == 'local' && inputs.s3-access-key != '' && inputs.s3-secret-key != '') }}
+      uses: actions/cache@v5
       with:
         path: ${{ inputs.path }}
         key: ${{ inputs.key }}
         restore-keys: ${{ inputs.restore-keys }}
 
-    - if: ${{ inputs.backend == 'local' && inputs.s3-access-key != '' }}
+    - if: ${{ inputs.backend == 'local' && inputs.s3-access-key != '' && inputs.s3-secret-key != '' }}
       uses: tespkg/actions-cache@e07e2d4953dc8c020d447363e5064e36d04f3cf9
       with:
         path: ${{ inputs.path }}
         key: ${{ inputs.key }}
         restore-keys: ${{ inputs.restore-keys }}
+        restore-only: ${{ inputs.restore-only }}
         endpoint: ${{ inputs.s3-endpoint }}
         port: ${{ inputs.s3-port }}
         insecure: ${{ inputs.s3-insecure }}
