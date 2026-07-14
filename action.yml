@@ -33,6 +33,10 @@ inputs:
     description: Bucket for the local backend.
     required: false
     default: ci-cache
+  s3-region:
+    description: S3 region for the local backend (must match the store's configured region).
+    required: false
+    default: garage
   s3-access-key:
     description: Access key for the local backend.
     required: false
@@ -64,6 +68,7 @@ runs:
         port: ${{ inputs.s3-port }}
         insecure: ${{ inputs.s3-insecure }}
         bucket: ${{ inputs.s3-bucket }}
+        region: ${{ inputs.s3-region }}
         accessKey: ${{ inputs.s3-access-key }}
         secretKey: ${{ inputs.s3-secret-key }}
         use-fallback: "false"
